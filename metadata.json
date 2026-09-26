@@ -1,0 +1,6 @@
+{
+  "name": "PharmStock HN - ระบบตัดสต๊อกยาและจ่ายยาตาม HN",
+  "description": "ระบบบริหารจัดการคลังยา ตัดสต๊อกยา และจ่ายยาเชื่อมโยงข้อมูลผู้ป่วยด้วยเลขประจำตัวผู้ป่วย (HN) พร้อมระบบตรวจสอบแพ้ยาอัตโนมัติและพิมพ์สลากยา",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

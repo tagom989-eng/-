@@ -27,7 +27,7 @@ export interface Medicine {
   unit: string; // e.g. "เม็ด", "แคปซูล", "ขวด", "แผง", "หลอด"
   currentStock: number;
   minStock: number; // Low stock threshold
-  unitPrice: number; // Price in THB
+  unitPrice?: number; // Optional price in THB
   batchNumber: string; // Lot No.
   expiryDate: string; // YYYY-MM-DD
   location: string; // Storage shelf e.g. "A-01", "ตู้เย็น 2-8°C"
@@ -44,8 +44,8 @@ export interface DispenseItem {
   strength: string;
   quantity: number;
   unit: string;
-  unitPrice: number;
-  totalPrice: number;
+  unitPrice?: number;
+  totalPrice?: number;
   batchNumber: string;
   instructions: string;
   warning: string;
@@ -65,7 +65,7 @@ export interface PrescriptionRecord {
   department: string;
   diagnosis: string;
   items: DispenseItem[];
-  totalAmount: number;
+  totalAmount?: number;
   notes?: string;
   status: 'completed' | 'cancelled';
   cancelledAt?: string;

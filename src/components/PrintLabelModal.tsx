@@ -274,10 +274,10 @@ export const PrintLabelModal: React.FC<PrintLabelModalProps> = ({
                           {item.quantity} {item.unit}
                         </td>
                         <td className="py-2 px-2 text-right font-mono text-slate-600">
-                          {item.unitPrice.toFixed(2)}
+                          {item.unitPrice > 0 ? item.unitPrice.toFixed(2) : '-'}
                         </td>
                         <td className="py-2 px-2 text-right font-mono font-bold text-slate-900">
-                          {item.totalPrice.toFixed(2)}
+                          {item.totalPrice > 0 ? item.totalPrice.toFixed(2) : '-'}
                         </td>
                       </tr>
                     ))}
@@ -288,7 +288,9 @@ export const PrintLabelModal: React.FC<PrintLabelModalProps> = ({
                         ยอดรวมทั้งสิ้น ({prescription.items.length} รายการ):
                       </td>
                       <td colSpan={2} className="py-3 px-2 font-mono font-bold text-base text-teal-800 text-right">
-                        ฿{prescription.totalAmount.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
+                        {prescription.totalAmount > 0
+                          ? `฿${prescription.totalAmount.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`
+                          : 'บริการตามสิทธิ (ไม่คิดมูลค่า)'}
                       </td>
                     </tr>
                   </tfoot>

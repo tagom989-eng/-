@@ -10,14 +10,18 @@ import {
   Trash2,
   ArrowUpDown,
   Filter,
+  FileSpreadsheet,
+  Download,
 } from 'lucide-react';
 import { Medicine } from '../types/pharmacy';
+import { excelService } from '../services/excelService';
 
 interface InventoryViewProps {
   medicines: Medicine[];
   onOpenAddMedicineModal: () => void;
   onOpenEditMedicineModal: (med: Medicine) => void;
   onOpenRestockModal: (medicineId?: string) => void;
+  onOpenExcelImportModal?: () => void;
   onDeleteMedicine: (id: string) => void;
 }
 
@@ -26,6 +30,7 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   onOpenAddMedicineModal,
   onOpenEditMedicineModal,
   onOpenRestockModal,
+  onOpenExcelImportModal,
   onDeleteMedicine,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -145,6 +150,28 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
+            {onOpenExcelImportModal && (
+              <button
+                type="button"
+                onClick={onOpenExcelImportModal}
+                className="px-3.5 py-2 text-xs sm:text-sm font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-lg flex items-center gap-1.5 transition-colors shadow-xs"
+                title="นำเข้าไฟล์ Excel รายการยาและสต๊อก (ไม่ต้องใส่ราคายา)"
+              >
+                <FileSpreadsheet className="w-4 h-4 text-emerald-700" />
+                <span>นำเข้ายาจาก Excel (.xlsx)</span>
+              </button>
+            )}
+
+            <button
+              type="button"
+              onClick={() => excelService.exportMedicinesToExcel(medicines)}
+              className="px-3 py-2 text-xs sm:text-sm font-medium text-slate-700 bg-slate-50 hover:bg-slate-100 border border-slate-200 rounded-lg flex items-center gap-1.5 transition-colors"
+              title="ส่งออกรายการยาทั้งหมดเป็นไฟล์ Excel"
+            >
+              <Download className="w-4 h-4 text-slate-500" />
+              <span>ส่งออก Excel</span>
+            </button>
+
             <button
               onClick={() => onOpenRestockModal()}
               className="px-3.5 py-2 text-xs sm:text-sm font-medium text-teal-800 bg-teal-50 hover:bg-teal-100 border border-teal-200 rounded-lg flex items-center gap-1.5 transition-colors"
@@ -312,7 +339,11 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
                       </td>
 
                       <td className="py-3 px-4 text-right font-mono text-slate-700">
-                        ฿{med.unitPrice.toFixed(2)}
+                        {med.unitPrice > 0 ? (
+                          `฿${med.unitPrice.toFixed(2)}`
+                        ) : (
+                          <span className="text-slate-400 text-[11px]">-</span>
+                        )}
                       </td>
 
                       <td className="py-3 px-4">

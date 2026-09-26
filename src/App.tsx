@@ -15,6 +15,7 @@ import { PatientModal } from './components/PatientModal';
 import { MedicineModal } from './components/MedicineModal';
 import { RestockModal } from './components/RestockModal';
 import { ExcelImportModal } from './components/ExcelImportModal';
+import { MedicineExcelImportModal } from './components/MedicineExcelImportModal';
 import {
   Patient,
   Medicine,
@@ -48,6 +49,7 @@ export default function App() {
   const [isRestockModalOpen, setIsRestockModalOpen] = useState(false);
   const [restockMedicineId, setRestockMedicineId] = useState<string | undefined>(undefined);
   const [isExcelModalOpen, setIsExcelModalOpen] = useState(false);
+  const [isMedicineExcelModalOpen, setIsMedicineExcelModalOpen] = useState(false);
   const [toastMessage, setToastMessage] = useState<string>('');
 
   // Sync to localStorage whenever states change
@@ -153,6 +155,68 @@ export default function App() {
       }`
     );
     setTimeout(() => setToastMessage(''), 6000);
+  };
+
+  // Handler: Batch Import Medicines from Excel (Price is optional / not required)
+  const handleMedicineExcelImport = (importedMeds: Medicine[], updateExisting: boolean) => {
+    let updated = [...medicines];
+    let addedCount = 0;
+    let updatedCount = 0;
+
+    importedMeds.forEach(newMed => {
+      const existingIndex = updated.findIndex(
+        m =>
+          m.code.toLowerCase() === newMed.code.toLowerCase() ||
+          (m.genericName.toLowerCase() === newMed.genericName.toLowerCase() &&
+            m.strength.toLowerCase() === newMed.strength.toLowerCase())
+      );
+
+      if (existingIndex >= 0) {
+        if (updateExisting) {
+          const oldStock = updated[existingIndex].currentStock;
+          updated[existingIndex] = {
+            ...updated[existingIndex],
+            ...newMed,
+            // Add imported stock to existing inventory
+            currentStock: oldStock + newMed.currentStock,
+            // If imported price was omitted (0), retain existing price if available
+            unitPrice: newMed.unitPrice > 0 ? newMed.unitPrice : updated[existingIndex].unitPrice,
+          };
+          updatedCount++;
+        }
+      } else {
+        updated.push(newMed);
+        addedCount++;
+      }
+    });
+
+    setMedicines(updated);
+    storageService.saveMedicines(updated);
+    setIsMedicineExcelModalOpen(false);
+    setToastMessage(
+      `นำเข้าข้อมูลยาจาก Excel สำเร็จ! เพิ่มรายการยาใหม่ ${addedCount} รายการ${
+        updatedCount > 0 ? `, อัปเดตและทบยอดสต๊อกยาเดิม ${updatedCount} รายการ` : ''
+      }`
+    );
+    setTimeout(() => setToastMessage(''), 6000);
+  };
+
+  // Handler: Update Prescriber (แพทย์ผู้สั่งยา) on an existing prescription
+  const handleUpdatePrescriber = (rxId: string, newDoctorName: string) => {
+    const updated = prescriptions.map(rx => {
+      if (rx.id === rxId) {
+        return {
+          ...rx,
+          doctorName: newDoctorName,
+        };
+      }
+      return rx;
+    });
+
+    setPrescriptions(updated);
+    storageService.savePrescriptions(updated);
+    setToastMessage(`อัปเดตชื่อแพทย์ผู้สั่งยาสำหรับใบสั่งยา ${rxId} เป็น "${newDoctorName}" เรียบร้อยแล้ว`);
+    setTimeout(() => setToastMessage(''), 5000);
   };
 
   // Handler: Select Patient from Directory to Dispense
@@ -322,6 +386,7 @@ export default function App() {
               setRestockMedicineId(medId);
               setIsRestockModalOpen(true);
             }}
+            onOpenExcelImportModal={() => setIsMedicineExcelModalOpen(true)}
             onDeleteMedicine={handleDeleteMedicine}
           />
         )}
@@ -351,6 +416,7 @@ export default function App() {
             medicines={medicines}
             onOpenPrintModal={rx => setPrintingPrescription(rx)}
             onCancelPrescription={handleCancelPrescription}
+            onUpdatePrescriber={handleUpdatePrescriber}
           />
         )}
 
@@ -421,6 +487,15 @@ export default function App() {
           existingPatients={patients}
           onImportComplete={handleExcelImport}
           onClose={() => setIsExcelModalOpen(false)}
+        />
+      )}
+
+      {/* 6. Excel Medicine Import Modal (Price is optional) */}
+      {isMedicineExcelModalOpen && (
+        <MedicineExcelImportModal
+          existingMedicines={medicines}
+          onImportComplete={handleMedicineExcelImport}
+          onClose={() => setIsMedicineExcelModalOpen(false)}
         />
       )}
     </div>

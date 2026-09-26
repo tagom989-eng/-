@@ -77,12 +77,23 @@ export const DispenseView: React.FC<DispenseViewProps> = ({
   // Cart of items to dispense
   const [cartItems, setCartItems] = useState<DispenseItem[]>([]);
 
-  // Metadata
+  // Metadata & Prescriber State
   const [doctorName, setDoctorName] = useState(clinicInfo.defaultDoctor);
+  const [isCustomDoctor, setIsCustomDoctor] = useState(false);
   const [pharmacistName, setPharmacistName] = useState(clinicInfo.defaultPharmacist);
   const [department, setDepartment] = useState(clinicInfo.department);
   const [diagnosis, setDiagnosis] = useState('ตรวจรักษาโรคทั่วไป (General Consultation)');
   const [notes, setNotes] = useState('');
+
+  // Common Prescribers list
+  const COMMON_DOCTORS = [
+    clinicInfo.defaultDoctor,
+    'นพ. สมศักดิ์ กิจเจริญ (ว.58190)',
+    'พญ. วราภรณ์ สุขสถิตย์ (ว.62410)',
+    'นพ. ธีรเดช นิมิตมงคล (ว.49120)',
+    'พญ. กนกวรรณ จันทร์สว่าง (ว.55310)',
+    'นพ. ประพันธ์ วิศิษฏ์พงษ์ (ว.41203)',
+  ].filter((v, i, a) => a.indexOf(v) === i); // unique
 
   // Alert & feedback state
   const [formError, setFormError] = useState<string>('');
@@ -620,7 +631,7 @@ export const DispenseView: React.FC<DispenseViewProps> = ({
               >
                 {searchedMedicines.map(m => (
                   <option key={m.id} value={m.id}>
-                    [{m.code}] {m.genericName} {m.strength} ({m.tradeName}) - สต๊อกคงเหลือ {m.currentStock} {m.unit} (฿{m.unitPrice.toFixed(2)})
+                    [{m.code}] {m.genericName} {m.strength} ({m.tradeName}) - สต๊อกคงเหลือ {m.currentStock} {m.unit} {m.unitPrice > 0 ? `(฿${m.unitPrice.toFixed(2)})` : ''}
                   </option>
                 ))}
               </select>
@@ -693,7 +704,9 @@ export const DispenseView: React.FC<DispenseViewProps> = ({
                   </div>
                   <div className="text-right">
                     <span className="text-slate-400">ราคา: </span>
-                    <span className="font-mono font-semibold text-slate-800">฿{currentMed.unitPrice.toFixed(2)}/{currentMed.unit}</span>
+                    <span className="font-mono font-semibold text-slate-800">
+                      {currentMed.unitPrice > 0 ? `฿${currentMed.unitPrice.toFixed(2)}/${currentMed.unit}` : 'ไม่ระบุราคา'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -849,7 +862,11 @@ export const DispenseView: React.FC<DispenseViewProps> = ({
                         <span className="text-[10px] text-slate-400 font-mono">Lot: {item.batchNumber}</span>
                       </div>
                       <div className="font-mono font-semibold text-slate-900">
-                        ฿{item.totalPrice.toFixed(2)}
+                        {item.totalPrice > 0 ? (
+                          `฿${item.totalPrice.toFixed(2)}`
+                        ) : (
+                          <span className="text-slate-400 font-normal">ไม่ระบุราคา</span>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -859,18 +876,51 @@ export const DispenseView: React.FC<DispenseViewProps> = ({
 
             {/* Prescriber & Metadata Inputs */}
             <div className="pt-2 border-t border-slate-200 space-y-2 text-xs">
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 <div>
-                  <label className="block text-[11px] font-medium text-slate-600 mb-0.5">
-                    แพทย์ผู้สั่งยา
-                  </label>
-                  <input
-                    type="text"
-                    value={doctorName}
-                    onChange={e => setDoctorName(e.target.value)}
-                    className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs focus:ring-1 focus:ring-teal-500"
-                  />
+                  <div className="flex items-center justify-between mb-0.5">
+                    <label className="block text-[11px] font-semibold text-slate-700">
+                      แพทย์ผู้สั่งยา (แก้ไขได้) *
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setIsCustomDoctor(!isCustomDoctor)}
+                      className="text-[10px] text-teal-700 hover:text-teal-900 underline font-medium"
+                    >
+                      {isCustomDoctor ? 'เลือกจากรายชื่อ' : '✏️ พิมพ์ระบุเอง'}
+                    </button>
+                  </div>
+
+                  {isCustomDoctor ? (
+                    <input
+                      type="text"
+                      value={doctorName}
+                      onChange={e => setDoctorName(e.target.value)}
+                      placeholder="พิมพ์ชื่อแพทย์ผู้สั่งยา..."
+                      className="w-full px-2.5 py-1.5 border border-teal-500 rounded text-xs bg-white focus:ring-1 focus:ring-teal-500 font-medium text-slate-900"
+                    />
+                  ) : (
+                    <select
+                      value={COMMON_DOCTORS.includes(doctorName) ? doctorName : 'custom'}
+                      onChange={e => {
+                        if (e.target.value === 'custom') {
+                          setIsCustomDoctor(true);
+                        } else {
+                          setDoctorName(e.target.value);
+                        }
+                      }}
+                      className="w-full px-2.5 py-1.5 border border-slate-300 rounded text-xs bg-white focus:ring-1 focus:ring-teal-500 font-medium text-slate-900"
+                    >
+                      {COMMON_DOCTORS.map(d => (
+                        <option key={d} value={d}>
+                          {d}
+                        </option>
+                      ))}
+                      <option value="custom">✏️ พิมพ์ชื่อแพทย์ท่านอื่น...</option>
+                    </select>
+                  )}
                 </div>
+
                 <div>
                   <label className="block text-[11px] font-medium text-slate-600 mb-0.5">
                     เภสัชกรผู้ตัดจ่าย
@@ -910,7 +960,11 @@ export const DispenseView: React.FC<DispenseViewProps> = ({
               <div className="flex justify-between items-baseline text-sm font-bold text-slate-900">
                 <span>มูลค่ารวมทั้งสิ้น:</span>
                 <span className="font-mono text-lg text-teal-800">
-                  ฿{totalCartAmount.toLocaleString('th-TH', { minimumFractionDigits: 2 })}
+                  {totalCartAmount > 0 ? (
+                    `฿${totalCartAmount.toLocaleString('th-TH', { minimumFractionDigits: 2 })}`
+                  ) : (
+                    <span className="text-xs text-slate-500 font-normal">บริการตามสิทธิ / ไม่ระบุราคา</span>
+                  )}
                 </span>
               </div>
 

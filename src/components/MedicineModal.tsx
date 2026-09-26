@@ -65,7 +65,7 @@ export const MedicineModal: React.FC<MedicineModalProps> = ({
   const [unit, setUnit] = useState('เม็ด');
   const [currentStock, setCurrentStock] = useState<number>(100);
   const [minStock, setMinStock] = useState<number>(30);
-  const [unitPrice, setUnitPrice] = useState<number>(2.0);
+  const [unitPrice, setUnitPrice] = useState<number>(0);
   const [batchNumber, setBatchNumber] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
   const [location, setLocation] = useState('A-01');
@@ -295,13 +295,16 @@ export const MedicineModal: React.FC<MedicineModalProps> = ({
               <span className="text-[11px] text-slate-400">เตือนเมื่อยอดน้อยกว่านี้</span>
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">ราคาต่อหน่วย (บาท)</label>
+              <label className="block text-xs font-semibold text-slate-700 mb-1">
+                ราคาต่อหน่วย (บาท) <span className="text-slate-400 font-normal">- ไม่จำเป็นต้องใส่</span>
+              </label>
               <input
                 type="number"
                 step="0.01"
                 min="0"
-                value={unitPrice}
-                onChange={e => setUnitPrice(Number(e.target.value))}
+                value={unitPrice || ''}
+                onChange={e => setUnitPrice(e.target.value === '' ? 0 : Number(e.target.value))}
+                placeholder="0.00 (เว้นว่างได้)"
                 className="w-full px-3 py-2 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 font-mono"
               />
             </div>
